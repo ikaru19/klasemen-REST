@@ -107,70 +107,138 @@ app.delete("/api/klasemen/:id", (req, res, next) => {
 
 app.post("/api/pertandingan/", (req, res, next) => {
     var errors=[]
-    
-    if (!req.body.id_tim){
-        errors.push("No id_tim specified");
-    }
-    if (!req.body.nama_tim){
-        errors.push("No nama_tim specified");
-    }
-
-    if (errors.length){
-        res.status(400).json({"error":errors.join(",")});
-        return;
-    }
-    var data = {
-        id_tim: req.body.id_tim,
-        nama_tim: req.body.nama_tim
-    }
-    var sql ='INSERT INTO klasemen (id_tim, nama_tim, p , w, d ,l , f , a , gd , pts) VALUES (?,?,0,0,0,0,0,0,0,0)'
-    var params =[data.id_tim, data.nama_tim]
-    db.run(sql, params, function (err, result) {
-        if (err){
-            res.status(400).json({"error": err.message})
-            return;
-        }
-        res.json({
-            "message": "success",
-            "data": data,
-            "id" : this.lastID
-        })
-    });
-})
-
-app.post("/api/pertandingan/", (req, res, next) => {
-    var errors=[]
  
-    if (!req.body.nama_tim){
+    if (!req.body.nama_tim1){
         errors.push("Nama Tim Kosong");
     }
-
-    // if (errors.length){
-    //     res.status(400).json({"error":errors.join(",")});
-    //     return;
-    // }
+    
     var data = {
         nama_tim1: req.body.nama_tim1,
-        nama_tim2: req.body.nama_tim2
+        nama_tim2 : req.body.nama_tim2,
+        skor_tim1 : req.body.skor_tim1,
+        skor_tim2 : req.body.skor_tim2
     }
 
-    var sql = "select * from klasemen where id_tim = ?"
-    var tim1 , tim2;
-    var params = [req.params.id]
-    db.get(sql, tim1, (err, row) => {
-            tim1 = row;
-      });
+    if(data.skor_tim1 > data.skor_tim2){
+        console.log("tim 1 menang")
+        db.run(
+            `UPDATE klasemen set 
+               p = COALESCE((SELECT MAX(p) + 1 from klasemen where id_tim = ?),p),
+               w = COALESCE((SELECT MAX(w) + 1 from klasemen where id_tim = ?),w),
+               f = COALESCE(?,f),
+               a = COALESCE(?,a),
+               gd = COALESCE(?,gd),
+               pts = COALESCE((SELECT MAX(pts) + 3 from klasemen where id_tim = ?),pts)
+               WHERE id_tim = ?`,
+            [data.nama_tim1, data.nama_tim1 , data.skor_tim1 , data.skor_tim2 , (data.skor_tim1 - data.skor_tim2) , data.nama_tim1, data.nama_tim1],
+            function (err, result) {
+                if (err){
+                    res.status(400).json({"error": res.message})
+                    console.log(err)
+                    return;
+                }
+                db.run(
+                    `UPDATE klasemen set 
+                       p = COALESCE((SELECT MAX(p) + 1 from klasemen where id_tim = ?),p),
+                       l = COALESCE((SELECT MAX(w) + 1 from klasemen where id_tim = ?),l),
+                       f = COALESCE(?,f),
+                       a = COALESCE(?,a),
+                       gd = COALESCE(?,gd)
+                       WHERE id_tim = ?`,
+                    [data.nama_tim2, data.nama_tim2 , data.skor_tim2 , data.skor_tim1 , (data.skor_tim2 - data.skor_tim1) , data.nama_tim2],
+                    function (err, result) {
+                        if (err){
+                            res.status(400).json({"error": res.message})
+                            console.log(err)
+                            return;
+                        }
+                        res.json({
+                            message: "success",
+                            result : "Team 1 win"
+                        })
+                });
+        });
+    }else if(data.skor_tim1 < data.skor_tim2){
+        console.log("tim 2 menang")
+        db.run(
+            `UPDATE klasemen set 
+               p = COALESCE((SELECT MAX(p) + 1 from klasemen where id_tim = ?),p),
+               w = COALESCE((SELECT MAX(w) + 1 from klasemen where id_tim = ?),w),
+               f = COALESCE(?,f),
+               a = COALESCE(?,a),
+               gd = COALESCE(?,gd),
+               pts = COALESCE((SELECT MAX(pts) + 3 from klasemen where id_tim = ?),pts)
+               WHERE id_tim = ?`,
+            [data.nama_tim2, data.nama_tim2 , data.skor_tim2 , data.skor_tim1 , (data.skor_tim2 - data.skor_tim1) , data.nama_tim2, data.nama_tim2],
+            function (err, result) {
+                if (err){
+                    res.status(400).json({"error": res.message})
+                    console.log(err)
+                    return;
+                }
+                db.run(
+                    `UPDATE klasemen set 
+                       p = COALESCE((SELECT MAX(p) + 1 from klasemen where id_tim = ?),p),
+                       l = COALESCE((SELECT MAX(w) + 1 from klasemen where id_tim = ?),l),
+                       f = COALESCE(?,f),
+                       a = COALESCE(?,a),
+                       gd = COALESCE(?,gd)
+                       WHERE id_tim = ?`,
+                    [data.nama_tim1, data.nama_tim1 , data.skor_tim1 , data.skor_tim2 , (data.skor_tim1 - data.skor_tim2) , data.nama_tim1],
+                    function (err, result) {
+                        if (err){
+                            res.status(400).json({"error": res.message})
+                            console.log(err)
+                            return;
+                        }
+                        res.json({
+                            message: "success",
+                            result : "Team 2 win"
+                        })
+                });
+        });
+    }else if(data.skor_tim1 == data.skor_tim2){
+        console.log("draw !")
+        db.run(
+            `UPDATE klasemen set 
+               p = COALESCE((SELECT MAX(p) + 1 from klasemen where id_tim = ?),p),
+               d = COALESCE((SELECT MAX(w) + 1 from klasemen where id_tim = ?),w),
+               f = COALESCE(?,f),
+               a = COALESCE(?,a),
+               gd = COALESCE(?,gd),
+               pts = COALESCE((SELECT MAX(pts) + 1 from klasemen where id_tim = ?),pts)
+               WHERE id_tim = ?`,
+            [data.nama_tim2, data.nama_tim2 , data.skor_tim2 , data.skor_tim1 , (data.skor_tim2 - data.skor_tim1) , data.nama_tim2, data.nama_tim2],
+            function (err, result) {
+                if (err){
+                    res.status(400).json({"error": res.message})
+                    console.log(err)
+                    return;
+                }
+                db.run(
+                    `UPDATE klasemen set 
+                       p = COALESCE((SELECT MAX(p) + 1 from klasemen where id_tim = ?),p),
+                       d = COALESCE((SELECT MAX(w) + 1 from klasemen where id_tim = ?),l),
+                       f = COALESCE(?,f),
+                       a = COALESCE(?,a),
+                       gd = COALESCE(?,gd),
+                       pts = COALESCE((SELECT MAX(pts) + 1 from klasemen where id_tim = ?),pts)
+                       WHERE id_tim = ?`,
+                    [data.nama_tim1, data.nama_tim1 , data.skor_tim1 , data.skor_tim2 , (data.skor_tim1 - data.skor_tim2), data.nama_tim1 , data.nama_tim1],
+                    function (err, result) {
+                        if (err){
+                            res.status(400).json({"error": res.message})
+                            console.log(err)
+                            return;
+                        }
+                        res.json({
+                            message: "success",
+                            result : "draw"
+                        })
+                });
+        });
+    }
 
-    db.get(sql, tim2, (err, row) => {
-        tim2 = row;
-    });  
-
-    
-    res.json({
-        "message":"success",
-        "data_tim1": tim1,
-        "data_tim2": tim2
-    })
 })
 
 
