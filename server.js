@@ -125,27 +125,31 @@ app.post("/api/pertandingan/", (req, res, next) => {
             `UPDATE klasemen set 
                p = COALESCE((SELECT MAX(p) + 1 from klasemen where id_tim = ?),p),
                w = COALESCE((SELECT MAX(w) + 1 from klasemen where id_tim = ?),w),
-               f = COALESCE(?,f),
-               a = COALESCE(?,a),
-               gd = COALESCE(?,gd),
-               pts = COALESCE((SELECT MAX(pts) + 3 from klasemen where id_tim = ?),pts)
-               WHERE id_tim = ?`,
-            [data.nama_tim1, data.nama_tim1 , data.skor_tim1 , data.skor_tim2 , (data.skor_tim1 - data.skor_tim2) , data.nama_tim1, data.nama_tim1],
+               f = COALESCE((SELECT MAX(f) + ? from klasemen where id_tim = ?),f),
+               a = COALESCE((SELECT MAX(a) + ? from klasemen where id_tim = ?),a),
+               gd = COALESCE((SELECT MAX(f) + ? from klasemen where id_tim = ?) - (SELECT MAX(a) + ? from klasemen where id_tim = ?),gd),
+               pts = COALESCE((SELECT MAX(pts) + 3 from klasemen where id_tim = ?),pts) 
+               where id_tim = ?`,
+            [data.nama_tim1, data.nama_tim1 , data.skor_tim1  , data.nama_tim1 , data.skor_tim2 , data.nama_tim1 
+                , data.skor_tim1  , data.nama_tim1 , data.skor_tim2 , data.nama_tim1, data.nama_tim1, data.nama_tim1],
             function (err, result) {
                 if (err){
                     res.status(400).json({"error": res.message})
+                    console.log("ASU")
                     console.log(err)
+                    
                     return;
                 }
+                console.log("isi 2 menang")
                 db.run(
                     `UPDATE klasemen set 
                        p = COALESCE((SELECT MAX(p) + 1 from klasemen where id_tim = ?),p),
-                       l = COALESCE((SELECT MAX(w) + 1 from klasemen where id_tim = ?),l),
-                       f = COALESCE(?,f),
-                       a = COALESCE(?,a),
-                       gd = COALESCE(?,gd)
+                       l = COALESCE((SELECT MAX(l) + 1 from klasemen where id_tim = ?),l),
+                       f = COALESCE((SELECT MAX(f) + ? from klasemen where id_tim = ?),f),
+                       a = COALESCE((SELECT MAX(a) + ? from klasemen where id_tim = ?),a),
+                       gd = COALESCE((SELECT MAX(f) + ? from klasemen where id_tim = ?) - (SELECT MAX(a) + ? from klasemen where id_tim = ?),gd)
                        WHERE id_tim = ?`,
-                    [data.nama_tim2, data.nama_tim2 , data.skor_tim2 , data.skor_tim1 , (data.skor_tim2 - data.skor_tim1) , data.nama_tim2],
+                    [data.nama_tim2, data.nama_tim2 , data.skor_tim2 , data.nama_tim2 , data.skor_tim1 , data.nama_tim2, data.skor_tim2 , data.nama_tim2 , data.skor_tim1 , data.nama_tim2 , data.nama_tim2],
                     function (err, result) {
                         if (err){
                             res.status(400).json({"error": res.message})
@@ -162,14 +166,15 @@ app.post("/api/pertandingan/", (req, res, next) => {
         console.log("tim 2 menang")
         db.run(
             `UPDATE klasemen set 
-               p = COALESCE((SELECT MAX(p) + 1 from klasemen where id_tim = ?),p),
-               w = COALESCE((SELECT MAX(w) + 1 from klasemen where id_tim = ?),w),
-               f = COALESCE(?,f),
-               a = COALESCE(?,a),
-               gd = COALESCE(?,gd),
-               pts = COALESCE((SELECT MAX(pts) + 3 from klasemen where id_tim = ?),pts)
+            p = COALESCE((SELECT MAX(p) + 1 from klasemen where id_tim = ?),p),
+            w = COALESCE((SELECT MAX(w) + 1 from klasemen where id_tim = ?),w),
+            f = COALESCE((SELECT MAX(f) + ? from klasemen where id_tim = ?),f),
+            a = COALESCE((SELECT MAX(a) + ? from klasemen where id_tim = ?),a),
+            gd = COALESCE((SELECT MAX(f) + ? from klasemen where id_tim = ?) - (SELECT MAX(a) + ? from klasemen where id_tim = ?),gd),
+            pts = COALESCE((SELECT MAX(pts) + 3 from klasemen where id_tim = ?),pts) 
                WHERE id_tim = ?`,
-            [data.nama_tim2, data.nama_tim2 , data.skor_tim2 , data.skor_tim1 , (data.skor_tim2 - data.skor_tim1) , data.nama_tim2, data.nama_tim2],
+               [data.nama_tim2, data.nama_tim2 , data.skor_tim2  , data.nama_tim2 , data.skor_tim1 , data.nama_tim2
+                , data.skor_tim2  , data.nama_tim2 , data.skor_tim1 , data.nama_tim2, data.nama_tim2, data.nama_tim2],
             function (err, result) {
                 if (err){
                     res.status(400).json({"error": res.message})
@@ -178,13 +183,14 @@ app.post("/api/pertandingan/", (req, res, next) => {
                 }
                 db.run(
                     `UPDATE klasemen set 
-                       p = COALESCE((SELECT MAX(p) + 1 from klasemen where id_tim = ?),p),
-                       l = COALESCE((SELECT MAX(w) + 1 from klasemen where id_tim = ?),l),
-                       f = COALESCE(?,f),
-                       a = COALESCE(?,a),
-                       gd = COALESCE(?,gd)
-                       WHERE id_tim = ?`,
-                    [data.nama_tim1, data.nama_tim1 , data.skor_tim1 , data.skor_tim2 , (data.skor_tim1 - data.skor_tim2) , data.nama_tim1],
+                    p = COALESCE((SELECT MAX(p) + 1 from klasemen where id_tim = ?),p),
+                    l = COALESCE((SELECT MAX(l) + 1 from klasemen where id_tim = ?),l),
+                    f = COALESCE((SELECT MAX(f) + ? from klasemen where id_tim = ?),f),
+                    a = COALESCE((SELECT MAX(a) + ? from klasemen where id_tim = ?),a),
+                    gd = COALESCE((SELECT MAX(f) + ? from klasemen where id_tim = ?) - (SELECT MAX(a) + ? from klasemen where id_tim = ?),gd)
+                    WHERE id_tim = ?`,
+                    [data.nama_tim1, data.nama_tim1 , data.skor_tim1 , data.nama_tim1 , data.skor_tim2 , data.nama_tim1, data.skor_tim1 ,
+                         data.nama_tim1 , data.skor_tim2 , data.nama_tim1 , data.nama_tim1],
                     function (err, result) {
                         if (err){
                             res.status(400).json({"error": res.message})
@@ -197,18 +203,18 @@ app.post("/api/pertandingan/", (req, res, next) => {
                         })
                 });
         });
-    }else if(data.skor_tim1 == data.skor_tim2){
+    }else if(data.skor_tim1 == data.skor_tim2 && data.skor_tim1 != "undefined"){
         console.log("draw !")
         db.run(
             `UPDATE klasemen set 
                p = COALESCE((SELECT MAX(p) + 1 from klasemen where id_tim = ?),p),
-               d = COALESCE((SELECT MAX(w) + 1 from klasemen where id_tim = ?),w),
-               f = COALESCE(?,f),
-               a = COALESCE(?,a),
-               gd = COALESCE(?,gd),
+               d = COALESCE((SELECT MAX(d) + 1 from klasemen where id_tim = ?),d),
+               f = COALESCE((SELECT MAX(f) + ? from klasemen where id_tim = ?),f),
+               a = COALESCE((SELECT MAX(a) + ? from klasemen where id_tim = ?),a),
                pts = COALESCE((SELECT MAX(pts) + 1 from klasemen where id_tim = ?),pts)
                WHERE id_tim = ?`,
-            [data.nama_tim2, data.nama_tim2 , data.skor_tim2 , data.skor_tim1 , (data.skor_tim2 - data.skor_tim1) , data.nama_tim2, data.nama_tim2],
+            [data.nama_tim2, data.nama_tim2 , data.skor_tim2 , data.nama_tim2 , data.skor_tim1 
+                , data.nama_tim2 , data.nama_tim2 ,data.nama_tim2],
             function (err, result) {
                 if (err){
                     res.status(400).json({"error": res.message})
@@ -217,18 +223,19 @@ app.post("/api/pertandingan/", (req, res, next) => {
                 }
                 db.run(
                     `UPDATE klasemen set 
-                       p = COALESCE((SELECT MAX(p) + 1 from klasemen where id_tim = ?),p),
-                       d = COALESCE((SELECT MAX(w) + 1 from klasemen where id_tim = ?),l),
-                       f = COALESCE(?,f),
-                       a = COALESCE(?,a),
-                       gd = COALESCE(?,gd),
-                       pts = COALESCE((SELECT MAX(pts) + 1 from klasemen where id_tim = ?),pts)
-                       WHERE id_tim = ?`,
-                    [data.nama_tim1, data.nama_tim1 , data.skor_tim1 , data.skor_tim2 , (data.skor_tim1 - data.skor_tim2), data.nama_tim1 , data.nama_tim1],
+                    p = COALESCE((SELECT MAX(p) + 1 from klasemen where id_tim = ?),p),
+                    d = COALESCE((SELECT MAX(d) + 1 from klasemen where id_tim = ?),d),
+                    f = COALESCE((SELECT MAX(f) + ? from klasemen where id_tim = ?),f),
+                    a = COALESCE((SELECT MAX(a) + ? from klasemen where id_tim = ?),a),
+                    pts = COALESCE((SELECT MAX(pts) + 1 from klasemen where id_tim = ?),pts)
+                    WHERE id_tim = ?`,
+                 [data.nama_tim1, data.nama_tim1 , data.skor_tim1 , data.nama_tim1 , data.skor_tim2
+                     , data.nama_tim1 , data.nama_tim1 ,data.nama_tim1],
                     function (err, result) {
                         if (err){
                             res.status(400).json({"error": res.message})
                             console.log(err)
+                            console.log("ASU")
                             return;
                         }
                         res.json({
@@ -237,6 +244,12 @@ app.post("/api/pertandingan/", (req, res, next) => {
                         })
                 });
         });
+    }else{
+        res.json({
+            message: "Error",
+            result : "error"
+        })
+
     }
 
 })
